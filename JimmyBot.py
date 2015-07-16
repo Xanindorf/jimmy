@@ -10,9 +10,7 @@ class JimmyBot:
 	def __init__(self, token):
 		print("Starting...")
 		self.token = token
-		self.db_path = open('db.pkl', 'rb')
-		self.db = pickle.load(self.db_path)
-		self.db_path.close()
+		self.message_offset = 0
 		self.url = 'https://api.telegram.org/bot%s/' % token
 
 	def message_for_bot(self, message):
@@ -45,33 +43,24 @@ class JimmyBot:
 		
 		return response
 	
-	def update_last_update(self, last_update):
-		self.db = {"last_update" : last_update}
-		self.db_path = open('db.pkl', 'wb')
-		pickle.dump(self.db, self.db_path)
-		self.db_path.close()
-		
 	def send_message(self, id, message, endpoint_url):
 		requests.get(endpoint_url + 'sendMessage', params=dict(chat_id=id, text=message))
-		
-	def get_last_update(self):
-		self.db_path = open('db.pkl', 'rb')
-		return pickle.load(self.db_path)['last_update']
-		self.db_path.close()
-		
+	
 	def run(self):
 		print("Started.")
 		while True:
-			response = requests.get(self.url + 'getUpdates')
+			response = requests.get(self.url + 'getUpdates', params=dict(offset=self.message_offset))
 			result = json.loads(response.text)
 			for update in result['result']:
-				if self.get_last_update() < update['update_id']:
-					self.update_last_update(update['update_id'])
-					print(update)
-					if 'message' in update:
-						message_text = update['message']['text']
+				self.message_offset = update['update_id'] + 1
+				print(update)
+				if 'message' in update:
+					message = update['message']
+					if 'title' in message['chat']:
+						continue
+					if 'text' in message:
+						message_text = message['text']
 						chat_id = update['message']['chat']['id']
-						print(message_text)
 						if self.message_for_bot(message_text):
 							self.handle_message(chat_id, message_text)
 						else:

@@ -1,7 +1,6 @@
 import requests
 import json
 import wikipedia
-import pickle
 from time import sleep
 from wikipedia import DisambiguationError
 from wikipedia import PageError

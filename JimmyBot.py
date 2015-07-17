@@ -55,8 +55,6 @@ class JimmyBot:
 				print(update)
 				if 'message' in update:
 					message = update['message']
-					if 'title' in message['chat']:
-						continue
 					if 'text' in message:
 						message_text = message['text']
 						chat_id = update['message']['chat']['id']
